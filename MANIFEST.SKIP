@@ -1,0 +1,10 @@
+CVS
+RCS
+~$
+\.out$
+\.old$
+\.bak$
+blib
+^MANIFEST.SKIP$
+\.ptkdb$
+^Makefile$
