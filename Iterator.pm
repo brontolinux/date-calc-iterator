@@ -1,6 +1,6 @@
 package Date::Calc::Iterator;
 
-# $Id: Iterator.pm,v 1.1 2004/03/17 19:18:11 bronto Exp $
+# $Id: Iterator.pm,v 1.2 2004/03/17 19:44:40 bronto Exp $
 
 use 5.006;
 use strict;
@@ -68,24 +68,25 @@ Date::Calc::Iterator - Iterate over a range of dates
 
   use Date::Calc::Iterator;
 
-  # This puts all the dates from Dec 1, 2003 to Dec 10, 2003 in @dates
-  # @dates will contain ([2003,12,1],[2003,12,2] ... [2003,12,10]) ;
+  # This puts all the dates from Dec 1, 2003 to Dec 10, 2003 in @dates1
+  # @dates1 will contain ([2003,12,1],[2003,12,2] ... [2003,12,10]) ;
   my $i1 = Date::Calc::Iterator->new(from => [2003,12,1], to => [2003,12,10]) ;
   my @dates1 ;
-  push @dates,$_ while $_ = $i1->next ;
+  push @dates1,$_ while $_ = $i1->next ;
 
   # Adding an integer step will iterate with the specified step
-  # @dates will contain ([2003,12,1],[2003,12,3] ... ) ;
+  # @dates2 will contain ([2003,12,1],[2003,12,3] ... ) ;
   my $i2 = Date::Calc::Iterator->new(from => [2003,12,1], to => [2003,12,10], step => 2) ;
   my @dates2 ;
-  push @dates,$_ while $_ = $i2->next ;
+  push @dates2,$_ while $_ = $i2->next ;
 
 
 =head1 ABSTRACT
 
-Date::Calc::Iterator objects are used to iterate over a range of dates, day by day
-or with a specified step. The method next() will return each time an array
-containing ($year,$month,$date) for the next date, or undef when finished.
+Date::Calc::Iterator objects are used to iterate over a range of
+dates, day by day or with a specified step. The method next() will
+return each time an array reference containing ($year,$month,$date)
+for the next date, or undef when finished.
 
 =head1 WARNING
 
@@ -95,11 +96,17 @@ the more complete one. If your problem is more complicated than this
 module can solve, you should go and check L<DateTime::Event::Recurrence>, which
 solves a so broad range of problems that yours can't fall out of it.
 
-Being so small, this module won't evolve a lot. Expect bug fixes,
+Probabily this module won't evolve a lot. Expect bug fixes,
 minor improvements in the interface, and nothing more.
 If you need to solve bigger problems, you have two choices: vivifying
 a 2.x version of the module (after contacting me, of course) or using
 DateTime::Event::Recurrence and its brothers.
+
+Anyway, I left the name Iterator, and not Iterator::Day or
+DayIterator, for example, so that the module can evolve if the need
+be. Who knows? Maybe one day I could need to make it iterate over
+weekdays, or over moon phases... let's leave the way open, time will
+tell.
 
 
 =head1 DESCRIPTION
@@ -107,7 +114,7 @@ DateTime::Event::Recurrence and its brothers.
 =head2 new
 
 Creates a new object. You B<must> pass it the end points of a date interval
-as hash references:
+as array references:
 
   $i = Date::Calc::Iterator->new( from => [2003,12,1], to => [2003,12,10] )
 
