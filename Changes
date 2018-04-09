@@ -1,6 +1,7 @@
 Revision history for CPAN module Date::Calc::Iterator
 
 1.01 2018-04-09 BRONTO
+    - Moved Iterator.pm to lib/Date/Calc/Iterator.pm
     - Added Changes file
 
 1.00 2004-03-19 BRONTO

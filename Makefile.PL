@@ -6,10 +6,10 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'		=> 'Date::Calc::Iterator',
-    'VERSION_FROM'	=> 'Iterator.pm', # finds $VERSION
+    'VERSION_FROM'	=> 'lib/Date/Calc/Iterator.pm', # finds $VERSION
     'PREREQ_PM'		=> {'Test::More'  =>  0,
 			    'Date::Calc'  =>  0 },
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM => 'Iterator.pm', # retrieve abstract from module
+      (ABSTRACT_FROM => 'lib/Date/Calc/Iterator.pm', # retrieve abstract from module
        AUTHOR     => 'Marco Marongiu <bronto@cpan.org>') : ()),
 );
