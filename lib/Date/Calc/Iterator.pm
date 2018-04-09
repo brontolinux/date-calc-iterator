@@ -8,7 +8,7 @@ use warnings;
 
 our @ISA = qw();
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use Date::Calc qw(Delta_Days Add_Delta_Days) ;
 
