@@ -6,11 +6,16 @@ use 5.006;
 use strict;
 use warnings;
 
-our @ISA = qw();
-
 our $VERSION = '1.01';
 
-use Date::Calc qw(Delta_Days Add_Delta_Days) ;
+use Date::Calc qw( Delta_Days Add_Delta_Days check_date ) ;
+use Ref::Util  qw( is_arrayref is_ref );
+use Carp       qw( croak );
+
+use constant FORMAT_ARRAYREF    => 1;
+use constant FORMAT_ISO_DASHED  => 2;
+use constant FORMAT_ISO_NO_DASH => 3;
+use constant DEFAULT_STEP_SIZE  => 1;
 
 sub new {
   my $self  = shift ;
@@ -18,21 +23,64 @@ sub new {
 
   my $class = ref $self || $self ;
 
-  die "Need a start date" unless exists $parms{from} and ref $parms{from} eq 'ARRAY' ;
-  die "Need an end date"  unless exists $parms{to}   and ref $parms{to}   eq 'ARRAY' ;
-  die "Need an integer step"  if exists $parms{step} and not $parms{step} =~ /^\d+$/ ;
+  my ($from, $from_format) = _validate_date_param(\%parms, 'from');
+  my ($to,   $to_format)   = _validate_date_param(\%parms, 'to');
 
-  _check_date($parms{from}) or die "Invalid start date" ;
-  _check_date($parms{to})   or die "Invalid end date" ;
+  # TODO: should we require that the from format matches the to format?
 
-  $parms{step}     = 1 unless exists $parms{step} ;
-  $parms{delta}    = 0 ;
-  $parms{maxdelta} = Delta_Days(@{$parms{from}},@{$parms{to}}) ;
+  if (exists($parms{step}) && $parms{step} !~ /^\d+$/) {
+      croak "the 'step' parameter must be an integer";
+  }
 
-  my @object_keys = qw(from to step delta maxdelta) ;
-  my %object_hash ;
-  @object_hash{@object_keys} = @parms{@object_keys} ;
-  return bless \%object_hash,$class ;
+  my $object          = {
+                          from   => $from,
+                          to     => $to,
+                          format => $from_format,
+                          delta  => 0,
+                        };
+
+  $object->{step}     = exists($parms{step}) ? $parms{step} : DEFAULT_STEP_SIZE;
+  $object->{maxdelta} = Delta_Days(@{$from}, @{$to}) ;
+
+  return bless($object, $class);
+}
+
+sub _validate_date_param
+{
+    my ($params, $key) = @_;
+    my $date           = $params->{$key};
+    my $ymdref;
+    my $format;
+
+    croak "you must provide a '$key' date" unless defined($date);
+
+    if (is_arrayref($date)) {
+        $ymdref = $date;
+        $format = FORMAT_ARRAYREF;
+    }
+    elsif (is_ref($date)) {
+        croak "unexpected reference type for '$key' parameter";
+    }
+    # TODO: should probably make these [0-9] instead of \d
+    elsif ($date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
+        $ymdref = [$1, $2, $3];
+        $format = FORMAT_ISO_DASHED;
+    }
+    elsif ($date =~ /^(\d\d\d\d)(\d\d)(\d\d)$/) {
+        $ymdref = [$1, $2, $3];
+        $format = FORMAT_ISO_NO_DASH;
+    }
+    else {
+        croak "unexpected '$key' date '$date'";
+    }
+
+    if (check_date(@$ymdref)) {
+        return ($ymdref, $format);
+    }
+    else {
+        croak "invalid date for '$key' parameter";
+    }
+
 }
 
 sub next {
@@ -45,19 +93,19 @@ sub next {
 
   my @next_date = Add_Delta_Days(@{$self->{from}},$self->{delta}) ;
   $self->{delta} += $self->{step} ;
-  return wantarray ? @next_date : \@next_date ;
-}
-
-sub _check_date {
-  my $date = shift ;
-  my ($y,$m,$d) = @$date ;
-
-  return undef unless $y =~ /^\d+$/ ;
-  return undef unless $m =~ /^\d{1,2}$/ and $m >= 1 and $m <= 12 ;
-  return undef unless $d =~ /^\d{1,2}$/ and $d >= 1 and $d <= 31 ;
+  if ($self->{format} == FORMAT_ARRAYREF) {
+      return wantarray ? @next_date : \@next_date ;
+  }
+  elsif ($self->{format} == FORMAT_ISO_DASHED) {
+    return sprintf('%d-%.2d-%.2d', @next_date);
+  }
+  else {
+    return sprintf('%d%.2d%.2d', @next_date);
+  }
 }
 
 1;
+
 __END__
 
 =head1 NAME
@@ -69,24 +117,32 @@ Date::Calc::Iterator - Iterate over a range of dates
   use Date::Calc::Iterator;
 
   # This puts all the dates from Dec 1, 2003 to Dec 10, 2003 in @dates1
-  # @dates1 will contain ([2003,12,1],[2003,12,2] ... [2003,12,10]) ;
-  my $i1 = Date::Calc::Iterator->new(from => [2003,12,1], to => [2003,12,10]) ;
-  my @dates1 ;
-  push @dates1,$_ while $_ = $i1->next ;
+  my $iterator = Date::Calc::Iterator->new(from => [2003,12,1], to => [2003,12,10]) ;
+  while (my $date = $iterator->next) {
+      # will produce [2003,12,1], [2003,12,2] ... [2003,12,10]
+  }
 
-  # Adding an integer step will iterate with the specified step
-  # @dates2 will contain ([2003,12,1],[2003,12,3] ... ) ;
-  my $i2 = Date::Calc::Iterator->new(from => [2003,12,1], to => [2003,12,10], step => 2) ;
-  my @dates2 ;
-  push @dates2,$_ while $_ = $i2->next ;
+Or as ISO 8601 format date strings:
 
+  use Date::Calc::Iterator;
+
+  my $iterator = Date::Calc::Iterator->new(from => '2003-12-01', to => '2003-12-10');
+  while (my $date = $iterator->next) {
+      # will produce '2003-12-01', '2003-12-02' ... '2003-12-10'
+  }
 
 =head1 ABSTRACT
 
 Date::Calc::Iterator objects are used to iterate over a range of
-dates, day by day or with a specified step. The method next() will
-return each time an array reference containing ($year,$month,$date)
-for the next date, or undef when finished.
+dates, day by day or with a specified step.
+
+The B<from> and B<to> dates can either be specified as C<[$year,$month,$day]>
+arrayrefs, or as ISO 8601 format date strings (where Christmas Day 2018 is either
+C<'2018-12-31'> or C<'20181231'>.
+
+The method next() will return each time a date in the same format that you
+specified the B<from> date, or C<undef> when finished.
+
 
 =head1 WARNING
 
@@ -114,7 +170,7 @@ tell.
 =head2 new
 
 Creates a new object. You B<must> pass it the end points of a date interval
-as array references:
+as array references or ISO 8601 date strings.
 
   $i = Date::Calc::Iterator->new( from => [2003,12,1], to => [2003,12,10] )
 
@@ -122,10 +178,12 @@ C<from> and C<to> are, obviously, required.
 
 Optionally, you can specify a custom step with the C<step> key, for example:
 
-  $i = Date::Calc::Iterator->new( from => [2003,12,1], to => [2003,12,31],
-                            step => 7 ) ;
+  $i = Date::Calc::Iterator->new(
+           from => '2003-12-01',
+           to   => '2003-12-31',
+           step => 7 );
 
-will iterate on December 2003, week by week, starting from December 1st.
+will iterate over December 2003, week by week, starting from December 1st.
 
 
 =head2 next
@@ -135,33 +193,13 @@ year, month and day in this order, or C<undef> if iteration is over;
 in scalar context, it returns a reference to that array, or C<undef>
 if iteration is over.
 
-=head1 HISTORY
-
-=over 8
-
-=item 0.01
-
-Original version; created by h2xs 1.22 with options
-
-  -CAX
-	-b
-	5.6.0
-	--use-new-tests
-	--skip-exporter
-	-O
-	-v
-	0.01
-	Date::Calc::Iterator
-
-=back
-
 
 
 =head1 SEE ALSO
 
-The wonderful Date::Calc module, on top of which this module is made.
+The wonderful L<Date::Calc> module, on top of which this module is made.
 
-DateTime::Event::Recurrence and all the DateTime family from
+L<DateTime::Event::Recurrence> and all the L<DateTime> family from
 L<http://datetime.perl.org>. 
 
 
@@ -180,7 +218,7 @@ make this module compatible with the Date::Calc::Object interface.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003 by Marco Marongiu
+Copyright 2003-2018 by Marco Marongiu
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. 
