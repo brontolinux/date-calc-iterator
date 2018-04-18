@@ -13,6 +13,8 @@ my @REQUIRES = (
     'strict'     => 0,
     'warnings'   => 0,
     'Date::Calc' => 0,
+    'Ref::Util'  => 0.202,
+    'Carp'       => 0,
 );
 
 my @TEST_REQUIRES = (
