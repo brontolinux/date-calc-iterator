@@ -1,7 +1,5 @@
 package Date::Calc::Iterator;
 
-# $Id: Iterator.pm,v 1.2 2004/03/17 19:44:40 bronto Exp $
-
 use 5.006;
 use strict;
 use warnings;
@@ -15,6 +13,7 @@ use Carp       qw( croak );
 use constant FORMAT_ARRAYREF    => 1;
 use constant FORMAT_ISO_DASHED  => 2;
 use constant FORMAT_ISO_NO_DASH => 3;
+
 use constant DEFAULT_STEP_SIZE  => 1;
 
 sub new {
@@ -211,6 +210,9 @@ Marco Marongiu, E<lt>bronto@cpan.orgE<gt>
 
 Thanks to Steffen Beyer, for writing his Date::Calc and for allowing
 me to use his namespace.
+
+Thanks to Neil Bowers, who added the support for ISO 8601 format dates,
+and the other changes in the 1.01 release.
 
 Blame on me, for being so lazy (or spare-time-missing) that I didn't
 make this module compatible with the Date::Calc::Object interface.
