@@ -1,5 +1,7 @@
 lib/Date/Calc/Iterator.pm
+Changes
 MANIFEST
 Makefile.PL
 README
 t/1.t
+t/02-iso-format.t

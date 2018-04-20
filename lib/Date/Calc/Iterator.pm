@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 use Date::Calc qw( Delta_Days Add_Delta_Days check_date ) ;
 use Ref::Util  qw( is_arrayref is_ref );

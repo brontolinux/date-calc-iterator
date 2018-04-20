@@ -1,5 +1,8 @@
 Revision history for CPAN module Date::Calc::Iterator
 
+1.02 2018-04-20 BRONTO
+    - Had forgotten to add Changes and t/02-iso-format.t to MANIFEST :-(
+
 1.01 2018-04-19 BRONTO
     - Added support for ISO 8601 format date strings (YYYY-MM-DD or YYYYMMDD)
     - Use Date::Calc's date checking, so YYYY-02-30 will now croak, for example
